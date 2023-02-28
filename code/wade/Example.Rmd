@@ -94,5 +94,18 @@ library(ggplot2)
 ggplot(data = summary_stat, aes(x = host_colless_stat, y = symb_colless_stat)) + 
   geom_point() +
   ylab("Symbiont Colless") + 
-  xlab("Host Colless")
+  xlab("Host Colless") + 
+  theme_bw()
+
+ggplot(data = summary_stat, aes(x = host_sackin_indx, y = symb_sackin_indx)) + 
+  geom_point() +
+  ylab("Symbiont Colless") + 
+  xlab("Host Colless") + 
+  theme_bw()
+
+ggplot(data = summary_stat, aes(x = host_blum_indx, y = symb_blum_indx)) + 
+  geom_point() +
+  ylab("Symbiont Colless") + 
+  xlab("Host Colless") + 
+  theme_bw()
 ```
