@@ -1,0 +1,34 @@
+---
+title: "treeducken + summary stats demo"
+output: html_notebook
+---
+
+R markdown notebook exploring how we could in theory explore what some of these distributions
+in cophylogenetics looks like.
+
+First off, we need to simulate some trees.
+
+```{r}
+library(treeducken)
+library(dplyr)
+# HOST PARAMETERS
+host_br <- rexp(1000, rate = 1)
+host_dr <- host_br / 2
+# SYMBIONT PARAMETERS
+symb_br <- rexp(1000, rate = 1)
+symb_dr <- symb_br / 2
+# BOTH PARAMETERS
+cospec_r <- rexp(1000, rate = 1)
+host_exp_rate <- rexp(1000, rate = 1)
+for(i in 1:1000){
+  sim_cophyBD(hbr = host_br[[i]],
+            sbr = symb_br[[i]],
+            hdr = host_dr[[i]],
+            sdr = symb_dr[[i]],
+            cosp_rate = cospec_r[[i]],
+            host_exp_rate = host_exp_rate[[i]],
+            numbsim = 1,
+            time_to_sim = 1.0)
+}
+
+```
