@@ -11,24 +11,88 @@ First off, we need to simulate some trees.
 ```{r}
 library(treeducken)
 library(dplyr)
+N <- 100
 # HOST PARAMETERS
-host_br <- rexp(1000, rate = 1)
+host_br <- rexp(N, rate = 1)
 host_dr <- host_br / 2
 # SYMBIONT PARAMETERS
-symb_br <- rexp(1000, rate = 1)
+symb_br <- rexp(N, rate = 1)
 symb_dr <- symb_br / 2
 # BOTH PARAMETERS
-cospec_r <- rexp(1000, rate = 1)
-host_exp_rate <- rexp(1000, rate = 1)
-for(i in 1:1000){
-  sim_cophyBD(hbr = host_br[[i]],
-            sbr = symb_br[[i]],
-            hdr = host_dr[[i]],
-            sdr = symb_dr[[i]],
-            cosp_rate = cospec_r[[i]],
-            host_exp_rate = host_exp_rate[[i]],
-            numbsim = 1,
-            time_to_sim = 1.0)
+cospec_r <- rexp(N, rate = 1)
+host_exp_rate <- rexp(N, rate = 1)
+cophy_set <- vector(length = N)
+for(i in 1:N){
+   cophy_set[[i]] <- sim_cophyBD(hbr = host_br[[i]],
+                            sbr = symb_br[[i]],
+                            hdr = host_dr[[i]],
+                            sdr = symb_dr[[i]],
+                            cosp_rate = cospec_r[[i]],
+                            host_exp_rate = host_exp_rate[[i]],
+                            numbsim = 1,
+                            time_to_sim = 1.0)
+}
+```
+
+
+## Tree Statistic calculation
+
+
+```{r}
+library(castor)
+library(dplyr)
+host_trees <- vector(length = length(cophy_set))
+symb_trees <- vector(length = length(cophy_set))
+intxn_mats <- vector(length = length(cophy_set))
+
+# Make a list for host trees, symbiont trees, and interaction matrices
+for(i in 1:N){
+  host_trees[[i]] <-treeducken::host_tree(cophy_set[[i]]) 
+  host_trees[[i]] <- host_trees[[i]]$host_tree %>% treeducken::drop_extinct()
+  symb_trees[[i]] <- treeducken::symb_tree(cophy_set[[i]]) 
+  symb_trees[[i]] <- symb_trees[[i]]$symb_tree %>% treeducken::drop_extinct()
+  intxn_mats[[i]] <- treeducken::association_mat(cophy_set[[i]]) 
 }
 
+summary_stat <- data.frame()
+```
+
+
+Some preliminary formatting has now been done. We can actually calculate stuff now. Note that I did prune the extinct tips to better resemble empirical datasets. In the majority of cases, 
+
+```{r}
+host_tree_colless_stat <- vector(length = N)
+symb_tree_colless_stat <- vector(length = N)
+host_sackin_indx <- vector(length = N)
+symb_sackin_indx <- vector(length = N)
+host_blum_indx <- vector(length = N)
+symb_blum_indx <- vector(length = N)
+
+for(i in 1:N){
+  host_colless_stat[[i]] <- host_trees[[i]] %>% tree_imbalance(type = "Colless")
+  symb_colless_stat[[i]] <- symb_trees[[i]] %>% tree_imbalance(type = "Colless")
+  host_sackin_indx[[i]] <- host_trees[[i]] %>% tree_imbalance(type = "Sackin")
+  symb_sackin_indx[[i]] <- symb_trees[[i]] %>% tree_imbalance(type = "Sackin")
+  host_blum_indx[[i]] <- host_trees[[i]] %>% tree_imbalance(type = "Blum")
+  symb_blum_indx[[i]] <- symb_trees[[i]] %>% tree_imbalance(type = "Blum")
+
+}
+
+summary_stat <- data.frame(host_colless_stat, 
+                           symb_colless_stat, 
+                           host_sackin_indx, 
+                           symb_sackin_indx,
+                           host_blum_indx,
+                           symb_blum_indx)
+```
+
+Now I have some of these tree balance statistics. Let us plot these.
+
+
+```{r}
+library(ggplot2)
+ggplot(data = summary_stat, aes(x = host_colless_stat, y = symb_colless_stat)) + 
+  geom_point() +
+  ylab("Symbiont Colless") + 
+  xlab("Host Colless")
 ```
